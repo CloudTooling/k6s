@@ -1,0 +1,24 @@
+{
+  "name": "@cloudtooling/k6s",
+  "version": "1.0.5",
+  "description": "Simplified k6",
+  "type": "module",
+  "scripts": {
+    "clean": "npm i"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CloudTooling/k6s.git"
+  },
+  "author": "Martin Reinhardt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CloudTooling/k6s/issues"
+  },
+  "homepage": "https://github.com/CloudTooling/k6s#readme",
+  "dependencies": {
+    "k6-junit": "^1.2.0"
+  },
+  "devDependencies": {
+  }
+}
