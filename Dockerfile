@@ -1,3 +1,4 @@
+FROM grafana/k6:0.56.0 as builder
 FROM node:22.13.0-slim
 
 ARG BUILD_DATE
@@ -22,5 +23,7 @@ RUN npm install --omit=dev &&\
 RUN apt-get update && apt-get -y upgrade &&\
   # clean up to slim image
   apt-get clean autoclean && apt-get autoremove --yes && rm -rf /var/lib/{apt,dpkg,cache,log}/
+
+COPY --from=builder /usr/bin/k6 /usr/bin/k6
 
 USER 1000
