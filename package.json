@@ -1,6 +1,6 @@
 {
   "name": "@cloudtooling/k6s",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Simplified k6",
   "type": "module",
   "scripts": {
@@ -19,6 +19,5 @@
   "dependencies": {
     "k6-junit": "^1.2.0"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
