@@ -1,6 +1,6 @@
 {
   "name": "@cloudtooling/k6s",
-  "version": "1.0.5",
+  "version": "0.1.0",
   "description": "Simplified k6",
   "type": "module",
   "scripts": {
