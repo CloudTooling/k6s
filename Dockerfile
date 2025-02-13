@@ -1,5 +1,5 @@
 FROM grafana/k6:0.57.0 as builder
-FROM node:22.13.1-slim
+FROM node:22.14.0-slim
 
 ARG BUILD_DATE
 ARG APP_VERSION
