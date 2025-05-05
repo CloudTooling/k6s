@@ -1,4 +1,4 @@
-FROM grafana/k6:0.58.0 as builder
+FROM grafana/k6:0.59.0 as builder
 FROM node:22.14.0-slim
 
 ARG BUILD_DATE
