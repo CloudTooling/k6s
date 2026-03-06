@@ -1,10 +1,17 @@
 {
   "name": "@cloudtooling/k6s",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Simplified k6",
-  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "npm i"
+    "clean": "npm i",
+    "test": "jest",
+    "start": "node dist/command.js",
+    "format": "./node_modules/.bin/prettier --write \"src/**\"",
+    "lint": "./node_modules/.bin/eslint \"src/**\"",
+    "build": "tsc",
+    "example": "cat test/out.txt | npm start --silent"
   },
   "repository": {
     "type": "git",
@@ -19,5 +26,19 @@
   "dependencies": {
     "k6-junit": "^1.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/jest": "^24.0.21",
+    "@types/k6": "^1.6.0",
+    "@types/node": "^12.12.5",
+    "@types/yargs": "^13.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.6.1",
+    "@typescript-eslint/parser": "^2.6.1",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "jest": "^24.9.0",
+    "prettier": "^1.18.2",
+    "ts-jest": "^24.1.0",
+    "typescript": "^5.9.3"
+  }
 }

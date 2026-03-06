@@ -12,3 +12,4 @@ logs/
 dist
 reports
 tmp/
+.qodo
