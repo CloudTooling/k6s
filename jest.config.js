@@ -1,5 +1,6 @@
 /** @type {import('jest').Config} */
 module.exports = {
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/dist/'],
   preset: 'ts-jest',
   testEnvironment: 'node',
   moduleNameMapper: {

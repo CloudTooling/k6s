@@ -15,5 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true
   },
-  "include": ["./src/*"]
+  "include": ["./src/*"],
+  "exclude": ["./src/*.spec.ts", "./src/__mocks__"]
 }
