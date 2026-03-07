@@ -27,7 +27,7 @@
     "k6-junit": "^1.2.0"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.21",
+    "@types/jest": "^30.0.0",
     "@types/k6": "^1.6.0",
     "@types/node": "^24.0.0",
     "@types/yargs": "^17.0.0",
