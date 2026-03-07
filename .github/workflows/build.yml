@@ -16,6 +16,7 @@ jobs:
         node_version:
           - 20
           - 22
+          - 24
         os:
           - ubuntu-latest
           - macOS-latest
@@ -28,43 +29,54 @@ jobs:
           node-version: '${{ matrix.node_version }}'
       - name: npm build and test
         run: |
-          npm run clean
+          npm ci
+          npm run build
+          npm test
+
   Container:
     name: Build Container Image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - name: Write version vars
         id: version-vars
         run: |
           BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
           BRANCH=${GITHUB_REF_NAME#v}
-          APP_VERSION=$(cat config.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g')
+          APP_VERSION=$(jq -r ".version" package.json)
           echo Version: $APP_VERSION
           echo "VERSION=$APP_VERSION" >> $GITHUB_ENV
           echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
-      - name: Build image
+
+      - name: Build Container Image
         id: build-image
-        uses: redhat-actions/buildah-build@v2
+        uses: docker/build-push-action@v6
         with:
-          image: cloudtooling/k6s
-          tags: 'next ${{env.APP_VERSION}}_rc'
-          containerfiles: |
-            ./Dockerfile
+          push: false
+          tags: |
+            cloudtooling/k6s:next
+            cloudtooling/k6s:${{github.run_id }}
+            cloudtooling/k6s:${{env.APP_VERSION}}_rc
           build-args: |
             BUILD_DATE=${{env.BUILD_DATE}}
             APP_VERSION=${{env.APP_VERSION}}
-      - name: Push To Docker Hub
-        id: push-to-dockerhub-preview
-        uses: redhat-actions/push-to-registry@v2
+
+      - name: Log in to GitHub container registry
+        uses: docker/login-action@v3
         with:
-          image: ${{ steps.build-image.outputs.image }}
-          tags: 'next ${{env.APP_VERSION}}_rc'
-          registry: registry.hub.docker.com
-          username: ${{ secrets.DOCKER_HUB_USER}}
+          username: ${{ vars.DOCKER_HUB_USER}}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
         if: github.ref == 'refs/heads/develop'
+
+      - name: Deploy Container Image
+        id: push-to-dockerhub-release
+        run: |
+          docker push cloudtooling/k6s:next
+          docker push cloudtooling/k6s:${{env.APP_VERSION}}_rc
+        if: github.ref == 'refs/heads/develop'
+
   Build-results:
     name: Build results
     if: ${{ always() }}

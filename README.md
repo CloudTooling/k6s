@@ -8,7 +8,7 @@ Some extensions for k6, also include [junit](https://github.com/Mattihew/k6-to-j
 ```yaml
 ...
   image:
-    name: docker.io/cloudtooling/k6s:0.2.0 
+    name: cloudtooling/k6s:0.2.0 
     entrypoint: ['']
   stage: test
   script:

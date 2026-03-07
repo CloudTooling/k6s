@@ -1,117 +1,94 @@
 name: Create release # You may choose a different name
 run-name: ${{ inputs.releaseversion }} # Enumerates entries in the "workflow runs" view
 on:
-    workflow_dispatch:
-        inputs:
-            releaseversion:
-                description: 'Release version'
-                required: true
-                type: string
-                default: "X.Y.Z"
+  workflow_dispatch:
+    inputs:
+      releaseversion:
+        description: 'Release version'
+        required: true
+        type: string
+        default: 'X.Y.Z'
 
 jobs:
-    release: # Arbitrarily chosen
-        name: Release
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            packages: write
-            attestations: write
-            id-token: write
-        steps:
+  release: # Arbitrarily chosen
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.CI_APP_ID }}
+          private-key: ${{ secrets.CI_PRIVATE_KEY }}
 
-            -   uses: actions/create-github-app-token@v2
-                id: app-token
-                with:
-                    app-id: ${{ vars.CI_APP_ID }}
-                    private-key: ${{ secrets.CI_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+          ref: ${{ github.head_ref }}
 
-            -   name: Checkout
-                uses: actions/checkout@v6
-                with:
-                    fetch-depth: 0
-                    token: ${{ steps.app-token.outputs.token }}
-                    ref: ${{ github.head_ref }}
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
-            -   name: Get GitHub App User ID
-                id: get-user-id
-                run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
-                env:
-                    GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - name: Configure Git author
+        run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>'
 
-            -   name: Configure Git author
-                run: |
-                    git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
-                    git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>'
+      - name: Setup NodeJS
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
-            -   name: Setup NodeJS
-                uses: actions/setup-node@v6
-                with:
-                    node-version: '24'
-                    registry-url: 'https://registry.npmjs.org'
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          export TZ="Europe/Berlin"
+          npm run clean
+          npm version --no-git-tag-version ${{ github.event.inputs.releaseversion }} || true
+          npm run build
 
-            -   name: Setup Java
-                uses: actions/setup-java@v5 # Does also set up Maven and GPG
-                with:
-                    distribution: 'temurin' # As good as any other, see: https://github.com/actions/setup-java#supported-distributions
-                    java-version: '21'
+      - name: Conventional Changelog Action
+        uses: TriPSs/conventional-changelog-action@v6
+        with:
+          input-file: CHANGELOG.md
+          github-token: ${{ steps.app-token.outputs.token }}
+          version-file: target/config.json
+          pre-release: true
+          skip-bump: true
+          skip-tag: true
+          skip-on-empty: true
+          tag-prefix: 'v'
 
-            -   name: Package Application
-                run: |
-                    npm run clean
-                    npm version --no-git-tag-version ${{ github.event.inputs.releaseversion }}
-                    npm run clean
+      - run: cd sdk && npm run clean && npm run build
+      - name: Publish npm package
+        run: |
+          npm version --no-git-tag-version ${{ github.event.inputs.releaseversion }}
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
-            -   name: Write version vars
-                run: |
-                    BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
-                    BRANCH=${GITHUB_REF_NAME#v}
-                    APP_VERSION=$(cat package.json | grep version| head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g')
-                    echo Version: $APP_VERSION
-                    echo "VERSION=$APP_VERSION" >> $GITHUB_ENV
-                    echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
-                    echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+      - name: Prepare release artifacts
+        run: |
+          # rename files
+          cp spi/target/keycloak-auditor-spi.jar keycloak-auditor-spi.jar
 
-            -   name: Conventional Changelog Action
-                uses: TriPSs/conventional-changelog-action@v6
-                with:
-                    input-file: CHANGELOG.md
-                    github-token: ${{ steps.app-token.outputs.token }}
-                    version-file: package.json
-                    pre-release: true
-                    skip-bump: true
-                    skip-tag: true
-                    skip-on-empty: true
-                    tag-prefix: 'v'
-
-            -   name: Create Release on GH
-                id: tag-and-release
-                uses: avakar/tag-and-release@v1.0.0
-                with:
-                    draft: true
-                    release_name: ${{ github.event.inputs.releaseversion }}
-                    tag_name: v${{ github.event.inputs.releaseversion }}
-                env:
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-            -   name: Build Container Image
-                id: build-image
-                uses: redhat-actions/buildah-build@v2
-                with:
-                    image: cloudtooling/k6s
-                    tags: 'latest ${{ github.event.inputs.releaseversion }}'
-                    containerfiles: |
-                        ./Dockerfile
-                    build-args: |
-                        BUILD_DATE=${{ env.BUILD_DATE }}
-                        APP_VERSION=${{ github.event.inputs.releaseversion }}
-
-            -   name: Push To Docker Hub
-                id: push-to-dockerhub-preview
-                uses: redhat-actions/push-to-registry@v2
-                with:
-                    image: ${{ steps.build-image.outputs.image }}
-                    tags: 'latest ${{ github.event.inputs.releaseversion }}'
-                    registry: registry.hub.docker.com
-                    username: ${{ secrets.DOCKER_HUB_USER}}
-                    password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Create GH release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ github.event.inputs.releaseversion }}
+          tag_name: v${{ github.event.inputs.releaseversion }}
+          draft: true
