@@ -70,18 +70,27 @@ jobs:
           skip-on-empty: true
           tag-prefix: 'v'
 
-      - run: cd sdk && npm run clean && npm run build
-      - name: Publish npm package
-        run: |
-          npm version --no-git-tag-version ${{ github.event.inputs.releaseversion }}
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: Build Container Image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: cloudtooling/k6s
+          tags: 'latest ${{ github.event.inputs.releaseversion }}'
+          containerfiles: |
+            ./Dockerfile
+          build-args: |
+            BUILD_DATE=${{ env.BUILD_DATE }}
+            APP_VERSION=${{ github.event.inputs.releaseversion }}
 
-      - name: Prepare release artifacts
-        run: |
-          # rename files
-          cp spi/target/keycloak-auditor-spi.jar keycloak-auditor-spi.jar
+      - name: Push To Docker Hub
+        id: push-to-dockerhub-preview
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: 'latest ${{ github.event.inputs.releaseversion }}'
+          registry: registry.hub.docker.com
+          username: cloudtooling
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Create GH release
         uses: softprops/action-gh-release@v2
