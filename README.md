@@ -8,7 +8,7 @@ Some extensions for k6, also include [junit](https://github.com/Mattihew/k6-to-j
 ```yaml
 ...
   image:
-    name: cloudtooling/k6s:0.2.0 
+    name: cloudtooling/k6s
     entrypoint: ['']
   stage: test
   script:
@@ -16,7 +16,7 @@ Some extensions for k6, also include [junit](https://github.com/Mattihew/k6-to-j
 ...
 ```
 
-```javascript
+```js
 import {getBearerTokenWithClientAssertion} from '/scripts/jwt.js';
 import {fail} from 'k6';
 
@@ -36,4 +36,41 @@ export async function getBearerTokenIntension() {
     return token;
 }
 
+```
+
+When running in docker, e.g. locally you can also mount reports back:
+
+```bash
+docker run "${args[@]}" -it -v $(pwd)/reports:/home/k6/reports -v $(pwd)/tests:/home/k6/tests cloudtooling/k6s run tests/main.js
+
+```
+
+When `tests/main.js` looks like this:
+
+```js
+import {htmlReport} from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
+import {textSummary} from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
+...
+
+// see https://k6.io/docs/using-k6/k6-options/reference/
+export const options = {
+
+    // requiring 100% success
+    thresholds: {
+        checks: ['rate==1.0'],
+    },
+
+    insecureSkipTLSVerify: true,
+    throw: true,
+...
+}
+....
+
+export function handleSummary(data) {
+  return {
+    stdout: textSummary(data, { indent: '→', enableColors: true }),
+    "reports/summary_a.html": htmlReport(data),
+    'reports/summary_a.json': JSON.stringify(data), // and a JSON with all the details...
+  };
+}
 ```
