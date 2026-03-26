@@ -56,7 +56,6 @@ jobs:
           export TZ="Europe/Berlin"
           npm run clean
           npm version --no-git-tag-version ${{ github.event.inputs.releaseversion }} || true
-          npm run build
 
       - name: Conventional Changelog Action
         uses: TriPSs/conventional-changelog-action@v6
@@ -89,7 +88,7 @@ jobs:
           image: ${{ steps.build-image.outputs.image }}
           tags: 'latest ${{ github.event.inputs.releaseversion }}'
           registry: registry.hub.docker.com
-          username: cloudtooling
+          username: ${{ vars.DOCKER_HUB_USER}}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Create GH release
@@ -101,3 +100,11 @@ jobs:
           name: ${{ github.event.inputs.releaseversion }}
           tag_name: v${{ github.event.inputs.releaseversion }}
           draft: true
+
+      - name: Finish
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git tag v${{ github.event.inputs.releaseversion }}
+          git push --tags
+          git push
