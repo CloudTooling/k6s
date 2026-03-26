@@ -32,7 +32,7 @@ if (!privateKeyPem) {
 export async function getBearerTokenIntension() {
     const url = `https://${kcUrl}/auth/realms/${kcRealm}/protocol/openid-connect/token`;
     const aud = `https://${kcUrl}/auth/realms/${kcRealm}`;
-    const token = getBearerTokenWithClientAssertion(url, clientId, privateKeyPem, aud)
+    const token = await getBearerTokenWithClientAssertion(url, clientId, privateKeyPem, aud)
     return token;
 }
 
