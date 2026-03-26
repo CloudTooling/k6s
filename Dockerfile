@@ -5,7 +5,7 @@ COPY . /app
 RUN npm ci
 RUN npm run build
 
-FROM grafana/k6:1.6.1
+FROM grafana/k6:1.7.0
 
 ARG BUILD_DATE
 ARG APP_VERSION
