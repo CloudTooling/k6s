@@ -1,3 +1,5 @@
+ARG K6_VERSION=1.7.1
+
 FROM node:24.15.0-slim AS builder
 
 WORKDIR /app
@@ -5,7 +7,7 @@ COPY . /app
 RUN npm ci
 RUN npm run build
 
-FROM grafana/k6:1.7.1
+FROM grafana/k6:${K6_VERSION}
 
 ARG BUILD_DATE
 ARG APP_VERSION

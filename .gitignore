@@ -13,3 +13,5 @@ dist
 reports
 tmp/
 .qodo
+tests/e2e/private_key.pem
+tests/e2e/cert.pem
