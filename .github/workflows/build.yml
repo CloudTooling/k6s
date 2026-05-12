@@ -31,6 +31,84 @@ jobs:
           npm ci
           npm run build
           npm test
+  end2end:
+    name: 'End2End on k6 ${{ matrix.k6_version }}'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        k6_version:
+          - '0.54.0'
+          - '1.0.0'
+          - '1.5.0'
+          - '1.7.1'
+          # renovate: datasource=github-releases depName=grafana/k6
+          - '1.7.1'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build k6s image for k6 ${{ matrix.k6_version }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: cloudtooling/k6s:e2e-${{ matrix.k6_version }}
+          build-args: |
+            K6_VERSION=${{ matrix.k6_version }}
+
+      - name: Create Docker network
+        run: docker network create e2e-net
+
+      - name: Start Keycloak
+        run: |
+          docker run -d \
+            --name keycloak \
+            --network e2e-net \
+            -p 8080:8080 \
+            -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            quay.io/keycloak/keycloak:26.6 \
+            start-dev
+
+      - name: Generate RSA key pair and certificate
+        run: |
+          openssl req -x509 -newkey rsa:2048 \
+            -keyout tests/e2e/private_key.pem \
+            -out tests/e2e/cert.pem \
+            -days 1 -nodes \
+            -subj "/CN=k6s-test-client"
+          chmod 644 tests/e2e/private_key.pem tests/e2e/cert.pem
+
+      - name: Configure Keycloak realm and client
+        env:
+          KC_URL: http://localhost:8080
+          KC_REALM: e2e
+          CLIENT_ID: k6s-test-client
+          CERT_PATH: tests/e2e/cert.pem
+        run: bash tests/e2e/setup-keycloak.sh
+
+      - name: Run k6 e2e test
+        run: |
+          docker run --rm \
+            --network e2e-net \
+            -v "${{ github.workspace }}/tests/e2e:/home/k6/tests" \
+            -e KC_URL=http://keycloak:8080 \
+            -e KC_REALM=e2e \
+            -e CLIENT_ID=k6s-test-client \
+            cloudtooling/k6s:e2e-${{ matrix.k6_version }} \
+            run /home/k6/tests/k6-test.js
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop keycloak 2>/dev/null || true
+          docker rm keycloak 2>/dev/null || true
+          docker network rm e2e-net 2>/dev/null || true
 
   Container:
     name: Build Container Image
@@ -82,6 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - Build
+      - end2end
       - Container
     steps:
       - run: exit 1
