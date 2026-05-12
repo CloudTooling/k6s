@@ -20,7 +20,7 @@ The library is consumed inside k6 scripts (which run in the k6 JS runtime, not N
 | `src/__mocks__/k6/encoding.ts` | Jest mock for `k6/encoding` (`b64encode`, `b64decode`) using Node `Buffer`. |
 | `src/__mocks__/k6/http.ts` | Jest mock for `k6/http` (`http.post`). |
 | `src/__mocks__/k6/crypto.ts` | No-op mock for the `import 'k6/crypto'` side-effect. |
-| `src/jwt.test.ts` | 19 Jest unit tests for `getBearerTokenWithClientAssertion`. |
+| `src/jwt.spec.ts` | 19 Jest unit tests for `getBearerTokenWithClientAssertion`. |
 | `jest.config.js` | Jest config: ts-jest preset, `moduleNameMapper` for k6 mocks, `module: commonjs` override. |
 | `tsconfig.json` | TypeScript config targeting ES2020. `module: ES2020` (overridden to `commonjs` for Jest). |
 
@@ -39,7 +39,7 @@ k6 modules (`k6`, `k6/encoding`, `k6/http`, `k6/crypto`) cannot run in Node.js.
 Jest's `moduleNameMapper` in `jest.config.js` redirects them to hand-written mocks under `src/__mocks__/`.
 `crypto.subtle` (Web Crypto) is mocked per-test via `Object.defineProperty(globalThis, 'crypto', ...)`.
 
-The test file pattern is `src/*.test.ts` (or `src/*.spec.ts`).
+The test file pattern is `src/*.spec.ts` (or `src/*.spec.ts`).
 
 ## Important constraints
 
