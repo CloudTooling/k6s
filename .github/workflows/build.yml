@@ -43,7 +43,7 @@ jobs:
           - '1.5.0'
           - '1.7.1'
           # renovate: datasource=github-releases depName=grafana/k6
-          - '1.7.1'
+          - '2.0.0'
 
     steps:
       - uses: actions/checkout@v6

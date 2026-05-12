@@ -2,5 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>CloudTooling/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "groupName": "grafana k6",
+      "matchPackageNames": ["grafana/k6", "@types/k6"]
+    }
   ]
 }
