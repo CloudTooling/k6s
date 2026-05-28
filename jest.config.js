@@ -10,15 +10,6 @@ module.exports = {
     '^k6$': '<rootDir>/src/__mocks__/k6.ts',
   },
   transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          module: 'commonjs',
-          noUnusedLocals: false,
-          noUnusedParameters: false,
-        },
-      },
-    ],
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
 };
