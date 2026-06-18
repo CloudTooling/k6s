@@ -21,7 +21,7 @@ jobs:
           - macOS-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: 'Use Node.js ${{ matrix.node_version }}'
         uses: actions/setup-node@v6
         with:
@@ -46,7 +46,7 @@ jobs:
           - '2.0.0'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -114,7 +114,7 @@ jobs:
     name: Build Container Image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Write version vars
         id: version-vars
