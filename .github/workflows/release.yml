@@ -71,7 +71,7 @@ jobs:
 
       - name: Build Container Image
         id: build-image
-        uses: redhat-actions/buildah-build@v2
+        uses: redhat-actions/buildah-build@v3
         with:
           image: cloudtooling/k6s
           tags: 'latest ${{ github.event.inputs.releaseversion }}'
