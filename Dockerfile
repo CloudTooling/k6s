@@ -1,6 +1,6 @@
 ARG K6_VERSION=2.1.0
 
-FROM node:24.18.1-slim AS builder
+FROM node:24.19.0-slim AS builder
 
 WORKDIR /app
 COPY . /app
