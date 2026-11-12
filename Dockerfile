@@ -1,4 +1,4 @@
-ARG K6_VERSION=2.3.0
+ARG K6_VERSION=2.4.0
 
 FROM node:24.22.3-slim AS builder
 
